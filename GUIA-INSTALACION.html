@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🌸 Instalar AniBD</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>" />
+<title>Instalar AniBD</title>
+<link rel="icon" href="public/icon.svg" />
 <style>
   :root {
     --bg: #faf7fb; --card: #ffffff; --ink: #2b2333; --muted: #6f6580;
@@ -23,7 +23,11 @@
   }
   .wrap { max-width: 760px; margin: 0 auto; padding: 24px 20px 64px; }
   header { text-align: center; padding: 28px 0 8px; }
-  header h1 { font-size: 2rem; margin: 0 0 6px; }
+  header h1 {
+    font-size: 2rem; margin: 0 0 6px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  header h1 img { width: 40px; height: 40px; border-radius: 10px; }
   header p { color: var(--muted); margin: 0; }
   h2 {
     font-size: 1.25rem; margin: 40px 0 4px;
@@ -65,7 +69,7 @@
 <div class="wrap">
 
 <header>
-  <h1>🌸 AniBD</h1>
+  <h1><img src="public/icon.svg" alt="" /> AniBD</h1>
   <p>Tu base de datos de animes — guía de instalación para Windows</p>
 </header>
 
@@ -104,7 +108,7 @@ progreso de episodios y recomendaciones. Tus datos son tuyos y quedan en tu máq
 <h2><span class="n">4</span> Creá el acceso directo</h2>
 <div class="card">
   <p>Doble click en <b><code>Crear-acceso-directo.bat</code></b> (está en la misma carpeta):
-  te aparece <b>AniBD con su florcita 🌸 en el Escritorio</b>. De ahí en adelante, siempre
+  te aparece <b>AniBD con su ícono en el Escritorio</b>. De ahí en adelante, siempre
   entrás por ahí.</p>
   <p class="muted">Si preferís hacerlo a mano: click derecho sobre <code>AniBD.bat</code> →
   "Enviar a" → "Escritorio (crear acceso directo)".</p>

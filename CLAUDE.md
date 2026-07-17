@@ -13,36 +13,44 @@ ni paso de build). La lista fuente del usuario es `Anime ordenado.txt` (español
 
 - **Node ≥ 20.6** (se usan `--env-file-if-exists`, `node:test`, `fetch`/`AbortSignal.timeout`
   globales). El stack es Node **porque en esta máquina Python 3.14 no tiene `pip`**.
-- **PostgreSQL corre en Docker**: contenedor `anibd-db`, datos en el volumen `anibd-data`
-  (persisten aunque el contenedor se detenga). El daemon se arranca con
-  `pkexec systemctl start docker` (el usuario está en el grupo `docker`). **No hay plugin
-  `docker compose`**: se usa `docker run` / `scripts/start-db.sh`.
-- Conexión por `DATABASE_URL` (default `postgres://anibd:anibd@localhost:5432/anibd`). No hay
-  `.env` por defecto; los defaults coinciden con el contenedor.
-- **Modo portable (`ANIBD_DB=pglite`)**: PostgreSQL embebido vía `@electric-sql/pglite` (WASM),
-  sin Docker — es cómo se distribuye a otras personas (Windows). Tiene prioridad sobre
-  `DATABASE_URL`. Datos en `%APPDATA%\AniBD\pgdata` / `~/.local/share/anibd/pgdata`
-  (override: `ANIBD_DATA_DIR`), a propósito FUERA del proyecto. La abstracción vive en
-  `src/db.js` (misma interfaz `pool.query`/`tx`; normaliza `rowCount` desde `affectedRows` y
-  usa `exec()` para SQL multi-statement como `schema.sql`). PGlite trae códigos SQLSTATE
-  reales, así que el mapeo de errores del server funciona igual. **La máquina del usuario
-  sigue en Docker** (su base real vive en el volumen `anibd-data`).
+- **La máquina del usuario ya NO usa Docker**: dejó de usarlo por preferencia (más simple sin
+  él). El `.env` local (gitignored) tiene `ANIBD_DB=pglite`, así que `npm start`/`npm run dev`
+  también corren contra PGlite. Su base real (300+ animes) vive en
+  `~/.local/share/anibd/pgdata`, migrada ahí — no hay contenedor ni volumen Docker en esta
+  máquina. Docker/PostgreSQL nativo siguen documentados en el README como opción
+  opcional/avanzada (por si algún día se quiere un Postgres real), pero no son el flujo
+  esperado acá.
+- **Modo portable / embebido (`ANIBD_DB=pglite`)**: PostgreSQL embebido vía `@electric-sql/pglite`
+  (WASM), sin Docker — es el modo por defecto (tanto para el uso normal del usuario como para
+  distribuirlo a otras personas en Windows). Tiene prioridad sobre `DATABASE_URL`. Datos en
+  `%APPDATA%\AniBD\pgdata` / `~/.local/share/anibd/pgdata` (override: `ANIBD_DATA_DIR`), a
+  propósito FUERA del proyecto. La abstracción vive en `src/db.js` (misma interfaz
+  `pool.query`/`tx`; normaliza `rowCount` desde `affectedRows` y usa `exec()` para SQL
+  multi-statement como `schema.sql`). PGlite trae códigos SQLSTATE reales, así que el mapeo de
+  errores del server funciona igual.
+- **PostgreSQL real (Docker o nativo) sigue soportado como alternativa**, no como default:
+  conexión por `DATABASE_URL` (default `postgres://anibd:anibd@localhost:5432/anibd`), usado
+  solo si se comenta `ANIBD_DB=pglite` del `.env`. `docker-compose.yml` / `scripts/start-db.sh`
+  siguen ahí para quien lo quiera (contenedor `anibd-db`, volumen `anibd-data`, sin plugin
+  `docker compose` → se usa `docker run` / `scripts/start-db.sh`), pero **no están en uso**.
 
 ## Comandos
 
-- `npm run go` (= `./anibd.sh`, = botón `AniBD.desktop`): levanta Docker+Postgres, **inicializa
-  la base solo si está vacía** (`scripts/ensure-db.js`, no destructivo) y si ya tiene datos aplica
-  las **migraciones idempotentes** de `db/migrations.sql` (`ALTER … IF NOT EXISTS`, sin borrar
-  nada), arranca el server y abre el navegador; al cerrar la ventana un `trap` apaga server +
-  contenedor (los datos quedan). Los cambios de esquema **aditivos** van a `db/migrations.sql`
-  (para bases con datos) **y** a `db/schema.sql` (para instalaciones nuevas).
-- `npm run lite` (= `node scripts/launch.js`, = `AniBD.bat` en Windows): todo-en-uno SIN
-  Docker (fuerza `ANIBD_DB=pglite`): ensure-db + server + navegador. Con base vacía y sin
-  `Anime ordenado.txt`, `ensure-db` NO falla: deja la base vacía (instalaciones de amigos;
-  guía para ellos: `GUIA-INSTALACION.html`; `Crear-acceso-directo.bat` crea el acceso directo
-  en el Escritorio con `AniBD.ico`, generado desde `public/icon.svg` con ImageMagick). El ZIP
-  para repartir se arma excluyendo `node_modules`, la lista personal y `.env` (comando en
-  README § Modo portable).
+- `npm run go` (= `./anibd.sh`, = botón `AniBD.desktop`): todo-en-uno SIN Docker (pglite) —
+  **inicializa la base solo si está vacía** (`scripts/ensure-db.js`, no destructivo) y si ya
+  tiene datos aplica las **migraciones idempotentes** de `db/migrations.sql`
+  (`ALTER … IF NOT EXISTS`, sin borrar nada), arranca el server y abre el navegador; al cerrar
+  la ventana se apaga todo (server; los datos de pglite quedan en disco). Los cambios de
+  esquema **aditivos** van a `db/migrations.sql` (para bases con datos) **y** a `db/schema.sql`
+  (para instalaciones nuevas). `anibd.sh` es un wrapper fino que delega en
+  `scripts/launch.js` — mismo motor que `npm run lite`/`AniBD.desktop`.
+- `npm run lite` (= `node scripts/launch.js`, = `AniBD.bat` en Windows): equivalente
+  multiplataforma a `npm run go` (fuerza `ANIBD_DB=pglite` igual, sea cual sea el `.env`):
+  ensure-db + server + navegador. Con base vacía y sin `Anime ordenado.txt`, `ensure-db` NO
+  falla: deja la base vacía (instalaciones de amigos; guía para ellos:
+  `GUIA-INSTALACION.html`; `Crear-acceso-directo.bat` crea el acceso directo en el Escritorio
+  con `AniBD.ico`, generado desde `public/icon.svg` con ImageMagick). El ZIP para repartir se
+  arma excluyendo `node_modules`, la lista personal y `.env` (comando en README § Uso rápido).
 - `npm start` / `npm run dev` (`--watch`): server en http://localhost:3000.
 - `npm run setup`: **DROP + recrea el esquema y reimporta la lista (DESTRUCTIVO).** Necesario
   para aplicar cambios de `data/anime-metadata.json` a una base ya creada (el arranque normal

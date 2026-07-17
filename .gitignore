@@ -1,6 +1,7 @@
 node_modules/
 .env
 Anime ordenado.txt
+data/anime-metadata.json
 npm-debug.log*
 *.log
 .DS_Store

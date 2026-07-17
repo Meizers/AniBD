@@ -1,4 +1,4 @@
-# 🌸 AniBD — tu base de datos de animes
+# <img src="public/icon.svg" width="28" height="28" align="top" alt=""> AniBD — tu base de datos de animes
 
 App web personal para llevar el registro de tus animes: **pendientes**, **en progreso**,
 **completados**, con **puntuación y notas por temporada**, **géneros filtrables**, cantidad
@@ -11,44 +11,31 @@ Stack: **Node.js (Express) + PostgreSQL**. Frontend en HTML/CSS/JS sin dependenc
 
 ## ▶ Uso rápido — un solo botón
 
-Tenés un botón **AniBD** en el menú de aplicaciones y en el escritorio (ícono de florcita 🌸).
+Tenés un botón **AniBD** en el menú de aplicaciones y en el escritorio (ícono de AniBD).
 Al abrirlo, con un click:
 
-1. Enciende Docker (la primera vez te pide la contraseña con un diálogo gráfico),
-2. Levanta PostgreSQL,
-3. Inicializa la base **solo si está vacía** (nunca borra tus datos),
-4. Arranca el servidor y **abre el navegador** en http://localhost:3000.
+1. Prepara la base **solo si hace falta** (nunca borra tus datos),
+2. Arranca el servidor y **abre el navegador** en http://localhost:3000.
 
-**Cerrás la ventana de la terminal (o Ctrl+C) y se apaga TODO** (servidor + base). Tus datos
-quedan guardados en el volumen de Docker para la próxima.
+**Cerrás la ventana de la terminal (o Ctrl+C) y se apaga TODO** (servidor + base). No hace
+falta Docker ni PostgreSQL instalado: usa [PGlite](https://pglite.dev) (PostgreSQL embebido
+dentro de Node) y guarda los datos en una carpeta local, **fuera del proyecto** (así podés
+borrar/actualizar la carpeta de la app sin perder nada):
 
-No hace falta ninguna preparación previa. La **primera** vez tarda un poco más porque descarga
-la imagen de PostgreSQL. Equivale a correr:
+- Linux: `~/.local/share/anibd/pgdata` · Windows: `%APPDATA%\AniBD\pgdata` · Mac:
+  `~/Library/Application Support/AniBD/pgdata`. Se cambia con `ANIBD_DATA_DIR`.
+- Backup = copiar esa carpeta.
+
+No hace falta ninguna preparación previa. Equivale a correr:
 
 ```bash
-./anibd.sh        # o:  npm run go
+./anibd.sh        # o:  npm run go   /  npm run lite
 ```
 
 > Reinstalar el botón (si moviste el proyecto): `cp AniBD.desktop ~/.local/share/applications/`
 
----
-
-## 💿 Modo portable (Windows / sin Docker)
-
-AniBD también corre **sin Docker ni PostgreSQL instalado**: con `ANIBD_DB=pglite` usa
-[PGlite](https://pglite.dev) (PostgreSQL embebido dentro de Node) y guarda los datos en una
-carpeta local, **fuera del proyecto** (así podés borrar/actualizar la carpeta de la app sin
-perder nada):
-
-- Windows: `%APPDATA%\AniBD\pgdata` · Linux: `~/.local/share/anibd/pgdata` · Mac:
-  `~/Library/Application Support/AniBD/pgdata`. Se cambia con `ANIBD_DATA_DIR`.
-- Backup = copiar esa carpeta.
-
-Para usarlo: **doble click en `AniBD.bat`** (Windows) o `npm run lite` (cualquier SO). Hace lo
-mismo que el botón AniBD pero sin Docker: prepara la base si hace falta, levanta el server y
-abre el navegador; cerrar la ventana apaga todo.
-
-**Para pasárselo a alguien**: armá un ZIP sin tu lista ni las dependencias —
+**Para pasárselo a alguien** (Windows/Mac/otra compu): armá un ZIP sin tu lista ni las
+dependencias —
 
 ```bash
 7z a -tzip AniBD.zip . '-xr!node_modules' '-x!.claude' '-x!Anime ordenado.txt' '-x!.env' '-x!data' '-x!AniBD.zip'
@@ -56,10 +43,8 @@ abre el navegador; cerrar la ventana apaga todo.
 
 — y del otro lado solo necesitan **Node.js** y seguir [`GUIA-INSTALACION.html`](GUIA-INSTALACION.html)
 (instalar Node, descomprimir, doble click en `AniBD.bat`; `Crear-acceso-directo.bat` les deja
-el acceso directo con la florcita —`AniBD.ico`— en el Escritorio). Sin tu lista, la base arranca
+el acceso directo con el ícono —`AniBD.ico`— en el Escritorio). Sin tu lista, la base arranca
 vacía y cada uno carga sus animes desde la web (el buscador autocompleta todo desde AniList).
-
-> Ambos modos conviven: sin `ANIBD_DB` todo sigue usando PostgreSQL/Docker como siempre.
 
 ---
 
@@ -78,19 +63,21 @@ vacía y cada uno carga sus animes desde la web (el buscador autocompleta todo d
 
 ## Requisitos
 
-- **Node.js ≥ 20.6** (tenés v24 ✔). Ya trae todo; no hace falta nada más de JS.
-- **PostgreSQL** corriendo en algún lado. Abajo tenés dos formas de conseguirlo.
+- **Node.js ≥ 20.6** (tenés v24 ✔). Ya trae todo; no hace falta nada más de JS — PostgreSQL
+  viene embebido (PGlite), no hace falta instalar ni levantar nada aparte.
 
 ---
 
-## 1) Levantar PostgreSQL — modo manual
+## (Opcional/avanzado) Usar PostgreSQL real en vez del embebido
 
-> Si usás el **botón AniBD** (sección de arriba) no necesitás nada de esto: hace todo solo.
-> Esta sección es por si querés levantar las cosas a mano.
+> Si usás el **botón AniBD** o `npm start`/`npm run dev` tal cual (sección de arriba) no
+> necesitás nada de esto: por defecto todo corre contra PGlite (embebido, sin Docker). Esta
+> sección es solo para quien prefiera un PostgreSQL "de verdad" corriendo aparte — quitá o
+> comentá `ANIBD_DB=pglite` de tu `.env` para volver a este modo.
 
 Elegí **una** opción.
 
-### Opción A — Docker (recomendada)
+### Opción A — Docker
 
 El daemon de Docker tiene que estar corriendo:
 
@@ -123,12 +110,10 @@ sudo -u postgres psql -c "CREATE USER anibd WITH PASSWORD 'anibd';"
 sudo -u postgres psql -c "CREATE DATABASE anibd OWNER anibd;"
 ```
 
----
-
-## 2) Configurar y preparar la app
+Si elegiste una de estas dos opciones, configurá la conexión antes de arrancar:
 
 ```bash
-cp .env.example .env      # ajustá DATABASE_URL si usás otra clave/host
+cp .env.example .env      # comentá ANIBD_DB=pglite y ajustá DATABASE_URL si hace falta
 npm install               # ya hecho, pero por las dudas
 npm run setup             # crea las tablas e importa "Anime ordenado.txt"
 ```
@@ -140,13 +125,14 @@ npm run setup             # crea las tablas e importa "Anime ordenado.txt"
 
 ---
 
-## 3) Usar la app
+## Desarrollo — levantar el server a mano
 
 ```bash
 npm start                 # o "npm run dev" para autorecarga
 ```
 
-Abrí **http://localhost:3000**.
+Abrí **http://localhost:3000**. Con el `.env` por defecto (PGlite) no hace falta ningún paso
+previo: la base se crea sola la primera vez.
 
 Desde ahí podés: buscar, filtrar por **género** y **estado**, ordenar (mejor puntaje, más
 visto…), crear animes, agregar temporadas, puntuar, dejar notas y sumar "veces vista" con
@@ -185,7 +171,8 @@ npm run setup     # 2) recrea la base usando esa metadata  (⚠ reimporta desde 
 
 | Comando            | Qué hace                                            |
 |--------------------|-----------------------------------------------------|
-| `npm run lite`     | Todo-en-uno SIN Docker (PGlite embebido)            |
+| `npm run go`       | Todo-en-uno (= botón AniBD): base + server + navegador |
+| `npm run lite`     | Igual que `go`, invocado directo con Node (multiplataforma) |
 | `npm start`        | Levanta el servidor web                             |
 | `npm run dev`      | Igual, con autorecarga (`--watch`)                  |
 | `npm run setup`    | Crea el esquema **e** importa la lista              |
