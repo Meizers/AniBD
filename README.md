@@ -34,17 +34,11 @@ No hace falta ninguna preparación previa. Equivale a correr:
 
 > Reinstalar el botón (si moviste el proyecto): `cp AniBD.desktop ~/.local/share/applications/`
 
-**Para pasárselo a alguien** (Windows/Mac/otra compu): armá un ZIP sin tu lista ni las
-dependencias —
-
-```bash
-7z a -tzip AniBD.zip . '-xr!node_modules' '-x!.claude' '-x!Anime ordenado.txt' '-x!.env' '-x!data' '-x!AniBD.zip'
-```
-
-— y del otro lado solo necesitan **Node.js** y seguir [`GUIA-INSTALACION.html`](GUIA-INSTALACION.html)
-(instalar Node, descomprimir, doble click en `AniBD.bat`; `Crear-acceso-directo.bat` les deja
-el acceso directo con el ícono —`AniBD.ico`— en el Escritorio). Sin tu lista, la base arranca
-vacía y cada uno carga sus animes desde la web (el buscador autocompleta todo desde AniList).
+**Para pasárselo a alguien** (Windows/Mac/otra compu): que baje este repo (botón **Code →
+Download ZIP** en GitHub, o `git clone`) y siga [`GUIA-INSTALACION.html`](GUIA-INSTALACION.html)
+— instalar Node, descomprimir si hace falta, doble click en `AniBD.bat`; `Crear-acceso-directo.bat`
+les deja el acceso directo con el ícono —`AniBD.ico`— en el Escritorio. La base arranca vacía y
+cada uno carga sus animes desde la web (el buscador autocompleta todo desde AniList).
 
 ---
 
@@ -114,14 +108,13 @@ Si elegiste una de estas dos opciones, configurá la conexión antes de arrancar
 
 ```bash
 cp .env.example .env      # comentá ANIBD_DB=pglite y ajustá DATABASE_URL si hace falta
-npm install               # ya hecho, pero por las dudas
-npm run setup             # crea las tablas e importa "Anime ordenado.txt"
+npm install                # ya hecho, pero por las dudas
+npm run db:schema          # crea las tablas
 ```
 
-`npm run setup` = crea el esquema **+** importa tu lista. Si solo querés una parte:
-
-- `npm run db:schema` → crea/reinicia las tablas (⚠️ borra lo que haya).
-- `npm run db:seed` → importa la lista de nuevo (no duplica).
+Con eso alcanza: la base queda vacía y cargás tus animes desde la web (el buscador autocompleta
+todo desde AniList). Si además tenés un seed inicial propio armado con `src/seed.js`, `npm run
+setup`/`db:seed` lo importan — ver [Scripts](#scripts).
 
 ---
 
@@ -140,46 +133,20 @@ el botón **+1**. Clic en un chip de género para filtrar rápido.
 
 ---
 
-## Sobre la importación de tu lista
-
-Tu archivo `Anime ordenado.txt` se importa automáticamente, en dos pasos:
-
-1. **Parseo** de cada línea: título, **puntaje** `[8/10]`, **nota** entre paréntesis y un primer
-   agrupado de **temporadas** de una misma serie.
-2. **Enriquecimiento con [AniList](https://anilist.co)** (`npm run fetch`, necesita internet):
-   por cada serie trae **géneros reales** (incluye *tags* como Isekai/Harem), la **portada**, y
-   usa las relaciones **secuela/precuela** para **unir temporadas** que el parseo dejó separadas.
-   Queda cacheado en `data/anime-metadata.json`.
-
-Si un anime no está en AniList, cae al etiquetado por palabras clave y queda sin portada (lo
-completás a mano desde la app). Todo entra como **completado** con 1 vista (era tu pila de "ya
-vistos"); ajustá lo que quieras desde la interfaz.
-
-### Volver a generar con géneros y portadas
-
-```bash
-npm run fetch     # 1) consulta AniList (~4 min) -> data/anime-metadata.json
-npm run setup     # 2) recrea la base usando esa metadata  (⚠ reimporta desde cero)
-```
-
-> El **botón AniBD** ya hace el paso 2 solo la primera vez (si el archivo de metadata existe).
-> Si ya tenías la base creada, corré los dos comandos de arriba para aplicar los cambios.
-
----
-
 ## Scripts
 
-| Comando            | Qué hace                                            |
-|--------------------|-----------------------------------------------------|
-| `npm run go`       | Todo-en-uno (= botón AniBD): base + server + navegador |
-| `npm run lite`     | Igual que `go`, invocado directo con Node (multiplataforma) |
-| `npm start`        | Levanta el servidor web                             |
-| `npm run dev`      | Igual, con autorecarga (`--watch`)                  |
-| `npm run setup`    | Crea el esquema **e** importa la lista              |
-| `npm run db:schema`| Solo crea/reinicia las tablas                       |
-| `npm run db:seed`  | Solo importa la lista                               |
-| `npm run fetch`    | Trae géneros y portadas desde AniList (internet)    |
-| `npm test`         | Tests del parser de la lista                        |
+| Comando             | Qué hace                                                     |
+|----------------------|---------------------------------------------------------------|
+| `npm run go`         | Todo-en-uno (= botón AniBD): base + server + navegador       |
+| `npm run lite`       | Igual que `go`, invocado directo con Node (multiplataforma)  |
+| `npm start`          | Levanta el servidor web                                      |
+| `npm run dev`        | Igual, con autorecarga (`--watch`)                            |
+| `npm run db:schema`  | Crea/reinicia las tablas (⚠️ borra lo que haya)               |
+| `npm run db:check`   | Diagnóstico: cuántos animes tienen portada en la base         |
+| `npm run setup`      | Crea el esquema **+** siembra datos iniciales, si los configuraste (`src/seed.js`, ⚠️ destructivo) |
+| `npm run db:seed`    | Solo el paso de siembra inicial (no duplica)                  |
+| `npm run fetch`      | Regenera metadata de AniList para la siembra (uso personal, internet) |
+| `npm test`           | Tests del parser de listas (`src/parseAnimeList.js`)          |
 
 ---
 
@@ -187,13 +154,19 @@ npm run setup     # 2) recrea la base usando esa metadata  (⚠ reimporta desde 
 
 ```
 GET    /api/stats
-GET    /api/genres                POST /api/genres              DELETE /api/genres/:id
+GET    /api/genres                    POST /api/genres                DELETE /api/genres/:id
+GET    /api/lookup?title=             (autocompletar desde AniList)
+GET    /api/search?title=             (sugerencias, varios matches)
 GET    /api/animes?genre=&status=&search=&sort=
-POST   /api/animes               GET /api/animes/:id
-PATCH  /api/animes/:id           DELETE /api/animes/:id
-POST   /api/animes/:id/seasons
-PATCH  /api/seasons/:id          DELETE /api/seasons/:id
-POST   /api/seasons/:id/watch    (suma una vista)
+POST   /api/animes                    GET /api/animes/:id
+PATCH  /api/animes/:id                DELETE /api/animes/:id
+GET    /api/animes/:id/missing        (temporadas/extras que faltan)
+POST   /api/animes/:id/seasons        POST /api/animes/:id/extras
+POST   /api/animes/:id/season-covers  (resuelve portadas por temporada)
+PATCH  /api/seasons/:id               DELETE /api/seasons/:id
+POST   /api/seasons/:id/watch         (suma una vista)
+POST   /api/seasons/:id/episode       (avanza/retrocede episodios, body {delta})
+GET    /api/recommendations           (según tus mejor puntuados)
 ```
 
 ---
@@ -202,14 +175,20 @@ POST   /api/seasons/:id/watch    (suma una vista)
 
 ```
 AniBD/
-├── db/schema.sql            Esquema PostgreSQL (tablas, vista de promedios, triggers)
+├── db/
+│   ├── schema.sql          Esquema PostgreSQL (tablas, vista de promedios, triggers)
+│   └── migrations.sql      Cambios de esquema aditivos (para bases con datos)
 ├── src/
-│   ├── server.js            Servidor Express + estáticos
-│   ├── routes.js            API REST
-│   ├── db.js                Pool de conexión
-│   ├── parseAnimeList.js    Parser de "Anime ordenado.txt"
-│   └── seed.js              Importación a la base
-├── scripts/db.js            CLI: schema / seed / setup
-├── public/                  Frontend (index.html, styles.css, app.js)
-└── test/parse.test.js       Tests del parser
+│   ├── server.js           Servidor Express + estáticos
+│   ├── routes.js           API REST
+│   ├── db.js               Pool de conexión (Postgres o PGlite embebido)
+│   ├── anilist.js          Cliente de AniList (lookup/search/recomendaciones)
+│   ├── parseAnimeList.js   Parser del formato de texto para la siembra inicial
+│   └── seed.js             Siembra inicial a partir de ese texto
+├── scripts/
+│   ├── launch.js           Todo-en-uno sin Docker (npm run go / lite)
+│   ├── ensure-db.js        Prepara/migra la base al arrancar (no destructivo)
+│   └── db.js               CLI: schema / seed / setup / check
+├── public/                 Frontend (index.html, styles.css, app.js)
+└── test/parse.test.js      Tests del parser
 ```
