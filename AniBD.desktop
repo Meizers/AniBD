@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=AniBD
+GenericName=Base de datos de animes
+Comment=Abre tu base de datos de animes (sin Docker; al cerrar apaga todo)
+Exec=bash -c "cd '/home/meizers/Documentos/repositorios/AniBD' && exec node scripts/launch.js"
+Path=/home/meizers/Documentos/repositorios/AniBD
+Icon=/home/meizers/Documentos/repositorios/AniBD/public/icon.svg
+Terminal=true
+Categories=AudioVideo;Database;
+StartupNotify=true

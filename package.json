@@ -1,0 +1,27 @@
+{
+  "name": "anibd",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Base de datos personal de animes: seguimiento (pendiente/en progreso/completado), puntuaciones y notas por temporada, géneros filtrables y promedio general por serie. Backend Node + PostgreSQL.",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "go": "bash anibd.sh",
+    "lite": "node scripts/launch.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "setup": "node --env-file-if-exists=.env scripts/db.js setup",
+    "db:schema": "node --env-file-if-exists=.env scripts/db.js schema",
+    "db:seed": "node --env-file-if-exists=.env scripts/db.js seed",
+    "db:check": "node --env-file-if-exists=.env scripts/db.js check",
+    "fetch": "node scripts/fetch-metadata.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.4",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

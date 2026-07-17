@@ -1,0 +1,8 @@
+node_modules/
+.env
+Anime ordenado.txt
+npm-debug.log*
+*.log
+.DS_Store
+.claude/settings.local.json
+AniBD.zip

@@ -1,0 +1,18 @@
+# Levanta solo PostgreSQL. Requiere el daemon de Docker corriendo y el plugin
+# "compose" (docker compose up -d). Si no lo tenés, usá scripts/start-db.sh.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: anibd-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: anibd
+      POSTGRES_PASSWORD: anibd
+      POSTGRES_DB: anibd
+    ports:
+      - "5432:5432"
+    volumes:
+      - anibd-data:/var/lib/postgresql/data
+
+volumes:
+  anibd-data:

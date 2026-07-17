@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AniBD · Tu base de datos de animes</title>
+  <link rel="icon" href="/icon.svg" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">🌸</span>
+        <div>
+          <h1>AniBD</h1>
+          <p>Tu base de datos de animes</p>
+        </div>
+      </div>
+      <div id="stats" class="stats"></div>
+    </header>
+
+    <section class="toolbar">
+      <input id="search" type="search" placeholder="Buscar anime…" autocomplete="off" />
+      <select id="fGenre" aria-label="Filtrar por género">
+        <option value="">Todos los géneros</option>
+      </select>
+      <select id="fStatus" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="en_progreso">En progreso</option>
+        <option value="completado">Completado</option>
+        <option value="en_pausa">En pausa</option>
+        <option value="abandonado">Abandonado</option>
+      </select>
+      <select id="fSort" aria-label="Ordenar">
+        <option value="title">Ordenar: A → Z</option>
+        <option value="score">Ordenar: mejor puntaje</option>
+        <option value="watches">Ordenar: más visto</option>
+        <option value="seasons">Ordenar: más temporadas</option>
+        <option value="recent">Ordenar: agregados</option>
+      </select>
+      <button id="btnRecs" class="btn" title="Recomendaciones según tus mejor puntuados">✨ Recomendados</button>
+      <button id="btnNew" class="btn primary">＋ Nuevo anime</button>
+    </section>
+
+    <p id="count" class="count"></p>
+    <main id="grid" class="grid"></main>
+    <p id="empty" class="empty" hidden>No hay animes que coincidan con el filtro.</p>
+  </div>
+
+  <dialog id="dlgAnime" class="dlg"></dialog>
+
+  <dialog id="dlgRelated" class="dlg"></dialog>
+
+  <dialog id="dlgRecs" class="dlg"></dialog>
+
+  <dialog id="dlgNew" class="dlg">
+    <form method="dialog" id="formNew" class="form">
+      <h2>Nuevo anime</h2>
+      <label>Título <small>(la portada y los géneros se completan solos)</small>
+        <input name="title" required placeholder="Ej: Date A Live" autocomplete="off" />
+      </label>
+      <div id="newLookup" class="lookup"></div>
+      <label>Géneros <small>(separados por coma)</small>
+        <input name="genres" placeholder="Ej: Romance, Acción, Mecha" />
+      </label>
+      <label>Portada <small>(URL de imagen, opcional)</small>
+        <input name="cover_url" placeholder="https://…" />
+      </label>
+      <label>Sinopsis <small>(opcional)</small>
+        <textarea name="synopsis" rows="3"></textarea>
+      </label>
+      <div class="form-actions">
+        <button value="cancel" class="btn ghost">Cancelar</button>
+        <button value="ok" class="btn primary">Crear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
